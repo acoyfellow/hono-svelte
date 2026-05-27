@@ -172,9 +172,12 @@ export { hydrate, mount, unmount } from "svelte";
       entryShim,
       `import Component from ${JSON.stringify(resolved)};
 import { hydrate as _hydrate } from "svelte";
-export function hydrate(props) {
+// hydrate(props, target?) — when target is omitted, mount on the default
+// #svelte-hono-root. Pass a custom element to coexist with other embeds on
+// the same page.
+export function hydrate(props, target) {
   return _hydrate(Component, {
-    target: document.getElementById("svelte-hono-root"),
+    target: target ?? document.getElementById("svelte-hono-root"),
     props,
   });
 }
