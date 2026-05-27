@@ -1,0 +1,10 @@
+name = "hono-svelte-hello"
+main = "build/worker.bundled.mjs"
+compatibility_date = "2026-04-21"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+
+# Build the bundled worker before wrangler picks it up.
+[build]
+command = "node build.mjs"
+

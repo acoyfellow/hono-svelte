@@ -1,0 +1,68 @@
+{
+  "name": "hono-svelte",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "Svelte 5 SSR + hydration inside a Hono Worker. No SvelteKit.",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./build": {
+      "types": "./dist/build.d.ts",
+      "import": "./dist/build.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run typecheck && npm run build",
+    "example:hello:build": "cd examples/hello && node build.mjs",
+    "example:hello:dev": "cd examples/hello && npx wrangler dev",
+    "docs:build": "cd examples/docs && node build.mjs",
+    "docs:dev": "cd examples/docs && npx wrangler dev",
+    "docs:deploy": "cd examples/docs && npx wrangler deploy"
+  },
+  "peerDependencies": {
+    "hono": ">=4",
+    "svelte": ">=5"
+  },
+  "dependencies": {
+    "esbuild": "^0.25.10",
+    "esbuild-svelte": "^0.9.5"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250410.0",
+    "@types/node": "^25.9.1",
+    "hono": "^4.12.19",
+    "svelte": "^5.45.0",
+    "typescript": "^5.7.2",
+    "wrangler": "^4.92.0"
+  },
+  "keywords": [
+    "hono",
+    "svelte",
+    "svelte-5",
+    "cloudflare-workers",
+    "ssr",
+    "hydration",
+    "edge"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/acoyfellow/hono-svelte.git"
+  },
+  "bugs": {
+    "url": "https://github.com/acoyfellow/hono-svelte/issues"
+  },
+  "homepage": "https://hono-svelte.coey.dev",
+  "author": "Jordan Coeyman <jcoeyman@cloudflare.com> (https://coey.dev)",
+  "license": "MIT"
+}

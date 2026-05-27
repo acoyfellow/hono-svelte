@@ -1,0 +1,15 @@
+name = "hono-svelte-docs"
+main = "build/worker.bundled.mjs"
+compatibility_date = "2026-04-21"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+account_id = "bfcb6ac5b3ceaf42a09607f6f7925823"
+
+# Build the bundled worker before wrangler picks it up.
+[build]
+command = "node build.mjs"
+
+# Custom domain on the personal-account zone coey.dev.
+[[routes]]
+pattern = "hono-svelte.coey.dev"
+custom_domain = true
