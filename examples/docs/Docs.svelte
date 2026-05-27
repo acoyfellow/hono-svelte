@@ -1,5 +1,6 @@
 <script>
   import Layout from "./Layout.svelte";
+  import { snippets } from "./snippets.generated.js";
   let { path = "/docs" } = $props();
 </script>
 
@@ -51,15 +52,15 @@
 
     <h2>The constant the build injects</h2>
     <p>Inside your worker source:</p>
-<pre><code>{`declare const __HONO_SVELTE_BUNDLES__: Record<string, { js: string; css: string }>;`}</code></pre>
+    {@html snippets.docsBundlesDecl}
     <p>esbuild's <code>define</code> replaces this identifier with a JSON object at build time. Pass it directly to <code>attachSvelteRoutes</code>.</p>
 
     <h2>Constraints</h2>
     <ul>
-      <li><strong>Build-time compile only.</strong> No <code>eval</code> at runtime — Workers prohibits it. See <a href="/why">Why</a>.</li>
-      <li><strong>One root per page.</strong> SSR mount target is <code>#hono-svelte-root</code>. The shell HTML wraps your component for hydration.</li>
-      <li><strong>No streaming yet.</strong> v0.0.1 returns full HTML in one chunk.</li>
-      <li><strong>No SvelteKit features.</strong> No <code>load</code> functions, no <code>+layout.svelte</code> conventions, no file-system router. Use Hono routes.</li>
+      <li><strong>Build-time compile.</strong> No <code>eval</code> at runtime — Workers prohibits it. See <a href="/why">Why</a>.</li>
+      <li><strong>One root per page.</strong> SSR mount target is <code>#hono-svelte-root</code>.</li>
+      <li><strong>Non-streaming HTML.</strong> Full document in one Response. Workers fan out at the edge; streaming is rarely the right primitive at this size.</li>
+      <li><strong>Hono owns routing.</strong> No file-system router, no <code>load</code> functions, no <code>+layout.svelte</code>. Use Hono. That's the point.</li>
     </ul>
   {/snippet}
 </Layout>

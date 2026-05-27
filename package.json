@@ -36,7 +36,8 @@
   },
   "dependencies": {
     "esbuild": "^0.25.10",
-    "esbuild-svelte": "^0.9.5"
+    "esbuild-svelte": "^0.9.5",
+    "shiki": "^4.1.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250410.0",

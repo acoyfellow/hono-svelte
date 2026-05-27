@@ -39,14 +39,14 @@
       {/if}
     </div>
 
-    <h2>What's missing from v0.0.1</h2>
+    <h2>Out of scope</h2>
+    <p>This library renders Svelte 5 components in a Hono Worker. SSR, hydration, edge cache. Anything beyond that is your code, not this library:</p>
     <ul>
-      <li>Server-side data fetch with shared SSR/CSR state (you can pass props today, but no automatic hydration of a server fetch result yet).</li>
-      <li>Streaming SSR.</li>
-      <li>Per-route code splitting (you bundle each component you register; that's the granularity).</li>
-      <li>Auto-OG image generation per route.</li>
+      <li>Want a file-system router? <a href="https://kit.svelte.dev">SvelteKit</a> exists.</li>
+      <li>Want streaming SSR? <code>svelte/server</code>'s <code>render()</code> is non-streaming. Build it yourself.</li>
+      <li>Want server-side data fetched into props? Pass it through Hono's normal handler. <code>props</code> is yours.</li>
+      <li>Want per-component OG images? Write a Hono route. <code>app.get("/og/:slug.png", ...)</code>.</li>
     </ul>
-    <p>All earnable as <code>0.0.1 → 0.0.1</code> (the version doesn't increment; the surface deepens).</p>
   {/snippet}
 </Layout>
 

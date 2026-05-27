@@ -1,5 +1,6 @@
 <script>
   import Layout from "./Layout.svelte";
+  import { snippets } from "./snippets.generated.js";
   let { path = "/" } = $props();
 </script>
 
@@ -19,25 +20,7 @@
 
     <h2>The whole worker</h2>
 
-<pre><code>{`import { Hono } from "hono";
-import { svelteRenderer, attachSvelteRoutes } from "hono-svelte";
-import Hello from "./hello.svelte";
-
-declare const __HONO_SVELTE_BUNDLES__: Record<string, { js: string; css: string }>;
-
-const app = new Hono();
-attachSvelteRoutes(app, { bundles: __HONO_SVELTE_BUNDLES__ });
-
-app.get(
-  "/",
-  svelteRenderer(Hello, {
-    hydrateAs: "hello",
-    title: "Hello",
-    props: { initialCount: 0 },
-  }),
-);
-
-export default app;`}</code></pre>
+    {@html snippets.homeWorker}
 
     <p>This page is the receipt — you're reading it. The site you're on is built with hono-svelte. <a href="/why">Why this exists →</a></p>
 
@@ -46,6 +29,7 @@ export default app;`}</code></pre>
       <li><strong>SSR first paint.</strong> The HTML is real, server-rendered Svelte. No blank flash.</li>
       <li><strong>Hydration after.</strong> Click handlers, <code>$state</code>, <code>$effect</code> all work.</li>
       <li><strong>One build step.</strong> <code>buildHonoSvelte()</code> handles both passes.</li>
+      <li><strong>Cache API built in.</strong> Both HTML and client bundles use Cloudflare's <code>caches.default</code>. Second request per PoP returns from cache without re-rendering.</li>
       <li><strong>Cloudflare Workers native.</strong> No <code>eval</code>, no <code>new Function</code>, no codegen.</li>
       <li><strong>~5 KB library</strong> + your component bundle.</li>
     </ul>

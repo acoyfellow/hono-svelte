@@ -6,3 +6,4 @@ examples/*/build/
 .DS_Store
 X-POST-DRAFT.md
 .npmrc
+examples/docs/snippets.generated.js

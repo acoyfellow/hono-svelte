@@ -42,6 +42,13 @@ export interface SvelteRendererOptions {
   head?: string;
   /** Body class string. */
   bodyClass?: string;
+  /**
+   * Cache-Control header for the SSR'd HTML response.
+   * Defaults to `"public, max-age=60, s-maxage=86400"` — browser revalidates
+   * after a minute, Cloudflare's edge keeps for a day. Pass `false` to send
+   * no Cache-Control (use only if the response varies per user).
+   */
+  cacheControl?: string | false;
 }
 
 export interface ClientBundle {
@@ -80,27 +87,42 @@ export function attachSvelteRoutes(
   if (tagged[TAG]) return;
   tagged[TAG] = true;
 
-  app.get(`${mountPrefix}/:filename`, (c) => {
+  app.get(`${mountPrefix}/:filename`, async (c) => {
+    // Edge cache: client bundles and scoped CSS are immutable per build.
+    // First request in a PoP runs this handler; every subsequent request
+    // in the same PoP is served by Cloudflare's edge cache without
+    // touching the Worker.
+    const cache = (globalThis as unknown as { caches?: { default: Cache } }).caches?.default;
+    if (cache) {
+      const hit = await cache.match(c.req.raw);
+      if (hit) return hit;
+    }
+
     const filename = c.req.param("filename");
     const m = filename.match(/^([a-zA-Z0-9_\-]+)\.(js|css)$/);
     if (!m) return c.notFound();
     const [, id, ext] = m;
     const bundle = registeredBundles[id];
     if (!bundle) return c.notFound();
-    if (ext === "js") {
-      return new Response(bundle.js, {
-        headers: {
-          "content-type": "application/javascript; charset=utf-8",
-          "cache-control": "public, max-age=31536000, immutable",
-        },
-      });
+
+    const response = ext === "js"
+      ? new Response(bundle.js, {
+          headers: {
+            "content-type": "application/javascript; charset=utf-8",
+            "cache-control": "public, max-age=31536000, immutable",
+          },
+        })
+      : new Response(bundle.css, {
+          headers: {
+            "content-type": "text/css; charset=utf-8",
+            "cache-control": "public, max-age=31536000, immutable",
+          },
+        });
+
+    if (cache) {
+      c.executionCtx.waitUntil(cache.put(c.req.raw, response.clone()));
     }
-    return new Response(bundle.css, {
-      headers: {
-        "content-type": "text/css; charset=utf-8",
-        "cache-control": "public, max-age=31536000, immutable",
-      },
-    });
+    return response;
   });
 }
 
@@ -154,8 +176,30 @@ export function svelteRenderer<Props extends Record<string, unknown> = Record<st
   options: SvelteRendererOptions,
 ): MiddlewareHandler {
   return async (c) => {
+    // Edge cache: only safe for GETs on URLs that don't vary per user.
+    // Caching is keyed by the full request including cookies/headers via
+    // the Cache API, so authenticated traffic doesn't collide with public.
+    const cache = (globalThis as unknown as { caches?: { default: Cache } }).caches?.default;
+    const cacheable = c.req.method === "GET" && options.cacheControl !== false;
+    if (cacheable && cache) {
+      const hit = await cache.match(c.req.raw);
+      if (hit) return hit;
+    }
+
     const props = (options.props ?? {}) as Props;
     const out = svelteRender(component as never, { props: props as never });
-    return c.html(shell({ body: out.body, head: out.head }, options.hydrateAs, true, options));
+    const html = shell({ body: out.body, head: out.head }, options.hydrateAs, true, options);
+
+    const cc = options.cacheControl ?? "public, max-age=60, s-maxage=86400";
+    const headers: Record<string, string> = {
+      "content-type": "text/html; charset=utf-8",
+    };
+    if (cc) headers["cache-control"] = cc;
+    const response = new Response(html, { status: 200, headers });
+
+    if (cacheable && cache && cc) {
+      c.executionCtx.waitUntil(cache.put(c.req.raw, response.clone()));
+    }
+    return response;
   };
 }

@@ -121,7 +121,7 @@ The `examples/docs/` site is the live docs at hono-svelte.coey.dev. The site is 
 
 ## Status
 
-v0.0.1 — minimal surface. Built, tested live, dogfooded as the docs site. The shape is right; the version doesn't increment until the surface deepens. See [docs](https://hono-svelte.coey.dev/docs) for the API and [why](https://hono-svelte.coey.dev/why) for the rationale.
+v0.0.1. Done. The version doesn't increment. Two exports, one build helper, edge-cached. The docs site is the receipt.
 
 ## License
 

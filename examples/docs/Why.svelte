@@ -1,5 +1,6 @@
 <script>
   import Layout from "./Layout.svelte";
+  import { snippets } from "./snippets.generated.js";
   let { path = "/why" } = $props();
 </script>
 
@@ -12,7 +13,7 @@
     <h2>The codegen wall</h2>
     <p>Cloudflare Workers run on a V8 isolate with <strong>code generation from strings disabled</strong>. <code>eval</code>, <code>new Function</code>, and friends all throw at runtime:</p>
 
-<pre><code>EvalError: Code generation from strings disallowed for this context</code></pre>
+    {@html snippets.whyError}
 
     <p>That's a security feature, not a bug. It rules out a popular pattern: compile Svelte source on the edge with <code>svelte/compiler</code>, evaluate the compiled output via <code>new Function</code>, render via <code>svelte/server</code>.</p>
 

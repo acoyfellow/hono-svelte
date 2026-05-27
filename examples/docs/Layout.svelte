@@ -49,16 +49,24 @@
   :global(a) { color: var(--accent); text-decoration: none; }
   :global(a:hover) { text-decoration: underline; }
   :global(pre) {
-    background: var(--code-bg); color: var(--code-fg);
+    /* shiki emits its own <pre class="shiki"> with inline color styles. */
     padding: 1rem 1.25rem; border-radius: 8px;
     overflow-x: auto; font: 13.5px/1.55 ui-monospace, "SF Mono", Menlo, monospace;
+    border: 1px solid var(--line);
   }
+  :global(pre.shiki) { background: #fdfcf8 !important; }
   :global(code) {
-    font: 13.5px/1.4 ui-monospace, "SF Mono", Menlo, monospace;
+    /* Inline code in body text. */
+    font: 0.92em/1.4 ui-monospace, "SF Mono", Menlo, monospace;
     background: #efece4; color: var(--fg);
     padding: 0.1rem 0.35rem; border-radius: 4px;
   }
-  :global(pre code) { background: transparent; color: inherit; padding: 0; }
+  :global(pre code) { background: transparent; color: inherit; padding: 0; font-size: 13.5px; }
+  /* Inline <code> inside headings inherits heading size, no background. */
+  :global(h1 code), :global(h2 code), :global(h3 code) {
+    font-size: 0.85em; background: transparent; padding: 0;
+    color: var(--accent);
+  }
   :global(h1) { font-size: clamp(2rem, 5vw, 3rem); line-height: 1.1; margin: 0 0 1rem; letter-spacing: -0.02em; }
   :global(h2) { font-size: 1.6rem; margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
   :global(h3) { font-size: 1.15rem; margin: 1.75rem 0 0.5rem; }

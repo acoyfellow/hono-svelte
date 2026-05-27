@@ -67,9 +67,13 @@ app.get("/examples", svelteRenderer(Examples, {
   props: { path: "/examples" },
 }));
 
-// Placeholder OG image — rendered as plain SVG for now; v0.0.1 ships
-// without a Workers-AI generator. The image is text-only and brand-aligned.
-app.get("/og.png", (c) => {
+// Brand-aligned OG image. Pure SVG, no rendering pipeline. Edge-cached.
+app.get("/og.png", async (c) => {
+  const cache = (globalThis as unknown as { caches?: { default: Cache } }).caches?.default;
+  if (cache) {
+    const hit = await cache.match(c.req.raw);
+    if (hit) return hit;
+  }
   const svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
   <rect width="1200" height="630" fill="#fafaf7"/>
@@ -80,13 +84,15 @@ app.get("/og.png", (c) => {
   <text x="80" y="430" font-family="ui-sans-serif, system-ui" font-size="36" fill="#5a5a5a">Real SSR. Real hydration. No SvelteKit.</text>
   <text x="80" y="540" font-family="ui-monospace, monospace" font-size="24" fill="#5a5a5a">hono-svelte.coey.dev</text>
 </svg>`;
-  return new Response(svg, {
-    headers: { "content-type": "image/svg+xml; charset=utf-8", "cache-control": "public, max-age=86400" },
+  const response = new Response(svg, {
+    headers: {
+      "content-type": "image/svg+xml; charset=utf-8",
+      "cache-control": "public, max-age=31536000, immutable",
+    },
   });
+  if (cache) c.executionCtx.waitUntil(cache.put(c.req.raw, response.clone()));
+  return response;
 });
-
-// /og.svg alias since we serve SVG content
-app.get("/og.svg", (c) => app.fetch(new Request(new URL("/og.png", c.req.url))));
 
 app.get("/robots.txt", (c) => c.text("User-agent: *\nAllow: /\nSitemap: https://hono-svelte.coey.dev/sitemap.xml\n"));
 
