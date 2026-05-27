@@ -7,12 +7,11 @@ export const snippets = {
     lang: "ts",
     code: `import { Hono } from "hono";
 import { svelteRenderer, attachSvelteRoutes } from "svelte-hono";
+import { bundles } from "./bundles.generated";
 import Hello from "./hello.svelte";
 
-declare const __SVELTE_HONO_BUNDLES__: Record<string, { js: string; css: string }>;
-
 const app = new Hono();
-attachSvelteRoutes(app, { bundles: __SVELTE_HONO_BUNDLES__ });
+attachSvelteRoutes(app, { bundles });
 
 app.get(
   "/",
@@ -47,12 +46,11 @@ npm i -D esbuild esbuild-svelte wrangler`,
     lang: "ts",
     code: `import { Hono } from "hono";
 import { svelteRenderer, attachSvelteRoutes } from "svelte-hono";
+import { bundles } from "./bundles.generated";
 import Hello from "./hello.svelte";
 
-declare const __SVELTE_HONO_BUNDLES__: Record<string, { js: string; css: string }>;
-
 const app = new Hono();
-attachSvelteRoutes(app, { bundles: __SVELTE_HONO_BUNDLES__ });
+attachSvelteRoutes(app, { bundles });
 
 app.get("/", svelteRenderer(Hello, { hydrateAs: "hello", title: "Hello" }));
 
@@ -87,9 +85,17 @@ command = "node build.mjs"`,
 # → http://localhost:8787`,
   },
 
-  docsBundlesDecl: {
+  startGitignore: {
+    lang: "bash",
+    code: `# .gitignore
+bundles.generated.ts
+build/`,
+  },
+
+  docsImport: {
     lang: "ts",
-    code: `declare const __SVELTE_HONO_BUNDLES__: Record<string, { js: string; css: string }>;`,
+    code: `import { bundles } from "./bundles.generated";
+attachSvelteRoutes(app, { bundles });`,
   },
 
   whyError: {

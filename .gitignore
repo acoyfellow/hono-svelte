@@ -7,3 +7,4 @@ examples/*/build/
 X-POST-DRAFT.md
 .npmrc
 examples/docs/snippets.generated.js
+examples/*/bundles.generated.ts

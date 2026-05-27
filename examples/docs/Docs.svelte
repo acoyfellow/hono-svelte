@@ -50,10 +50,10 @@
       </tbody>
     </table>
 
-    <h2>The constant the build injects</h2>
-    <p>Inside your worker source:</p>
-    {@html snippets.docsBundlesDecl}
-    <p>esbuild's <code>define</code> replaces this identifier with a JSON object at build time. Pass it directly to <code>attachSvelteRoutes</code>.</p>
+    <h2>The generated bundles import</h2>
+    <p><code>buildHonoSvelte()</code> writes <code>bundles.generated.ts</code> next to your worker entry. Import it like any other module:</p>
+    {@html snippets.docsImport}
+    <p>Add it to <code>.gitignore</code> — it's regenerated each build. No globals, no <code>declare const</code>, no esbuild <code>define</code> magic to learn.</p>
 
     <h2>Constraints</h2>
     <ul>

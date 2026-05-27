@@ -16,6 +16,7 @@
     {#each nav as link}
       <a href={link.href} class:active={path === link.href}>{link.label}</a>
     {/each}
+    <a class="external" href="https://www.npmjs.com/package/svelte-hono" rel="noopener">npm →</a>
     <a class="external" href="https://github.com/acoyfellow/svelte-hono" rel="noopener">GitHub →</a>
   </nav>
 </header>
@@ -25,8 +26,8 @@
 </main>
 
 <footer>
-  <span>v0.0.1 · <a href="https://github.com/acoyfellow/svelte-hono/blob/main/LICENSE">MIT</a></span>
-  <span class="dim">made for fun by <a href="https://coey.dev" rel="noopener">@acoyfellow</a></span>
+  <span>v0.0.1 · <a href="https://www.npmjs.com/package/svelte-hono">npm</a> · <a href="https://github.com/acoyfellow/svelte-hono">GitHub</a> · <a href="https://github.com/acoyfellow/svelte-hono/blob/main/LICENSE">MIT</a></span>
+  <span class="dim">hello (new) world · <a href="https://coey.dev" rel="noopener">@acoyfellow</a></span>
 </footer>
 
 <style>

@@ -1,19 +1,25 @@
 # svelte-hono
 
+> `hello (new) world`
+
+[![npm version](https://img.shields.io/npm/v/svelte-hono.svg)](https://www.npmjs.com/package/svelte-hono)
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/acoyfellow/svelte-hono)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 Drop a `.svelte` file in a Hono Worker. Real SSR. Real hydration. No SvelteKit.
 
+- **npm:** <https://www.npmjs.com/package/svelte-hono>
+- **docs:** <https://svelte-hono.coey.dev>
+- **repo:** <https://github.com/acoyfellow/svelte-hono>
+
 ```ts
 import { Hono } from "hono";
 import { svelteRenderer, attachSvelteRoutes } from "svelte-hono";
+import { bundles } from "./bundles.generated";
 import Hello from "./hello.svelte";
 
-declare const __SVELTE_HONO_BUNDLES__: Record<string, { js: string; css: string }>;
-
 const app = new Hono();
-attachSvelteRoutes(app, { bundles: __SVELTE_HONO_BUNDLES__ });
+attachSvelteRoutes(app, { bundles });
 
 app.get("/", svelteRenderer(Hello, {
   hydrateAs: "hello",
@@ -24,19 +30,16 @@ app.get("/", svelteRenderer(Hello, {
 export default app;
 ```
 
-That's it. Live docs: **<https://svelte-hono.coey.dev>**.
+That's the whole worker. `bundles.generated.ts` is written for you by `svelte-hono/build` — it's a normal ES module the worker imports, no globals, no `define` magic.
 
 ## What it does
 
 - Compiles your `.svelte` files at build time (esbuild + esbuild-svelte).
 - Server-renders Svelte 5 components on the Worker — real HTML, instant first paint.
 - Hydrates on the client — `$state`, `$effect`, event handlers, all of it.
+- Edge-caches both HTML and client bundles via `caches.default`.
 - Stays out of your way. Hono owns routing. You own the rest.
 - No `eval`, no `new Function`, no Workers codegen prohibition to dodge.
-
-## Why this exists
-
-Cloudflare Workers disable `eval` and `new Function`. That kills the popular "compile Svelte source at the edge" pattern (search "Code generation from strings disallowed"). This adapter takes the other path: compile at build time, evaluate at request time as a normal ES module. The full story: <https://svelte-hono.coey.dev/why>
 
 ## Install
 
@@ -84,7 +87,14 @@ npm i -D esbuild esbuild-svelte wrangler
    command = "node build.mjs"
    ```
 
-5. **Run it**:
+5. **Add to `.gitignore`**:
+
+   ```
+   bundles.generated.ts
+   build/
+   ```
+
+6. **Run it**:
 
    ```bash
    npx wrangler dev
@@ -102,7 +112,7 @@ npm install && npm run build
 # minimal counter
 cd examples/hello && node build.mjs && npx wrangler dev
 
-# full docs site (4 pages, multi-route, OG image, sitemap)
+# full docs site (5 pages, multi-route, OG image, sitemap, edge-cached)
 cd examples/docs && node build.mjs && npx wrangler dev
 ```
 
@@ -116,6 +126,7 @@ The `examples/docs/` site is the live docs at svelte-hono.coey.dev. The site is 
 | Build | One `node build.mjs` | Vite + adapter | None |
 | SSR | Yes | Yes | Yes |
 | Client reactivity | Yes (Svelte 5) | Yes | No |
+| Edge cache (CF Workers) | Yes (built-in) | Yes (manual) | Yes (manual) |
 | Conventions | None | Many | None |
 | Library size | ~5 KB built | n/a (full framework) | bundled with Hono |
 

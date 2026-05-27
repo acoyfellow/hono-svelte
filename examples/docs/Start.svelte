@@ -9,6 +9,8 @@
     <h1>5-minute quickstart</h1>
     <p class="muted">Set up a Hono Worker that renders Svelte 5 components. The repo lives at <a href="https://github.com/acoyfellow/svelte-hono">acoyfellow/svelte-hono</a>.</p>
 
+    <p><a href="https://www.npmjs.com/package/svelte-hono">svelte-hono on npm</a> · <a href="https://github.com/acoyfellow/svelte-hono">repo</a></p>
+
     <h2>1. Install</h2>
     {@html snippets.startInstall}
 
@@ -28,7 +30,11 @@
     <p><code>wrangler.toml</code>:</p>
     {@html snippets.startWrangler}
 
-    <h2>6. Run it</h2>
+    <h2>6. Add to <code>.gitignore</code></h2>
+    <p><code>bundles.generated.ts</code> is regenerated each build. Don't commit it.</p>
+    {@html snippets.startGitignore}
+
+    <h2>7. Run it</h2>
     {@html snippets.startRun}
 
     <p>Click the button. Counter goes up. <a href="/docs">Full API →</a></p>

@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { svelteRenderer, attachSvelteRoutes } from "../../dist/index.js";
+import { bundles } from "./bundles.generated.js";
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-expect-error -- esbuild-svelte emits a Svelte component module.
 import Home from "./Home.svelte";
@@ -12,10 +13,8 @@ import Why from "./Why.svelte";
 // @ts-expect-error
 import Examples from "./Examples.svelte";
 
-declare const __SVELTE_HONO_BUNDLES__: Record<string, { js: string; css: string }>;
-
 const app = new Hono();
-attachSvelteRoutes(app, { bundles: __SVELTE_HONO_BUNDLES__ });
+attachSvelteRoutes(app, { bundles });
 
 const SITE = "svelte-hono — Svelte 5 on Hono Workers";
 const DESC = "Drop a .svelte file in a Hono Worker. Real SSR, real hydration, no SvelteKit.";
