@@ -82,6 +82,21 @@ export interface BuildHonoSvelteOptions {
    * Defaults to `false` — the worker bundle is produced.
    */
   skipWorkerBundle?: boolean;
+  /**
+   * Map of import specifier -> source file for shared modules every
+   * component should import once, not duplicate.
+   *
+   *   sharedModules: { './store.svelte': './src/store.svelte.ts' }
+   *
+   * Each entry is built into its own content-hashed bundle and added to
+   * the import map under its specifier. The specifier is also marked as
+   * external when bundling each component, so the component's import
+   * resolves to the shared bundle at runtime instead of being inlined.
+   *
+   * Use for cross-component reactive stores (Svelte 5 module-scope $state),
+   * shared utilities, etc.
+   */
+  sharedModules?: Record<string, string>;
 }
 
 export interface BuildHonoSvelteResult {
@@ -168,6 +183,42 @@ export * from "svelte";
     _runtime: { js: runtimeJs, css: "", hash: contentHash(runtimeJs) },
   };
 
+  // ── 1b. Shared modules (eg. cross-component stores). ─────────────────
+  // Each is bundled separately, content-hashed, and added to the import
+  // map at its specifier. Per-component bundles externalize the specifier
+  // so they resolve to the shared bundle at runtime instead of duplicating.
+  //
+  // Bundle id for storage = sanitized specifier (slashes -> underscores,
+  // leading dot stripped) prefixed with `_shared_`. Bundles registry keys
+  // are stable across builds; only the hash changes.
+  const sharedModules = options.sharedModules ?? {};
+  const sharedSpecifierToBundleId: Record<string, string> = {};
+  for (const [specifier, sourcePath] of Object.entries(sharedModules)) {
+    const resolved = resolve(workerDir, sourcePath);
+    const safeId = specifier.replace(/^\.\//, "").replace(/[^\w]/g, "_");
+    const bundleId = `_shared_${safeId}`;
+    sharedSpecifierToBundleId[specifier] = bundleId;
+    const outfile = join(outDir, `client-${bundleId}.js`);
+    await build({
+      entryPoints: [resolved],
+      bundle: true,
+      format: "esm",
+      platform: "browser",
+      target,
+      outfile,
+      minify: !dev,
+      sourcemap: dev,
+      // Shared modules externalize the runtime too — they import svelte
+      // runes via 'svelte/internal/client'.
+      external: [...SHARED_EXTERNALS],
+      plugins: [sveltePluginClient],
+      logLevel: "silent",
+    });
+    const js = readFileSync(outfile, "utf8");
+    bundles[bundleId] = { js, css: "", hash: contentHash(js) };
+  }
+  const sharedSpecifiers = Object.keys(sharedModules);
+
   // ── 2. Per-component client bundles, runtime externalized. ───────────
   // Each bundle gets a content hash over (js + css). The hash is embedded
   // in the public URL: /__svelte/{id}.{hash}.js. New deploy → new bytes →
@@ -206,7 +257,7 @@ export function hydrate(props, target) {
       outfile: clientOutfile,
       minify: !dev,
       sourcemap: dev,
-      external: [...SHARED_EXTERNALS],
+      external: [...SHARED_EXTERNALS, ...sharedSpecifiers],
       plugins: [sveltePluginClient],
       logLevel: "silent",
     });
@@ -218,6 +269,16 @@ export function hydrate(props, target) {
       css = "";
     }
     bundles[id] = { js, css, hash: contentHash(js, css) };
+  }
+
+  // Expose the specifier → bundle id mapping so the worker can serve the
+  // right URL when emitting the import map. Stored alongside the regular
+  // bundles as `_sharedSpecifiers` (a sentinel id starting with `_`).
+  if (sharedSpecifiers.length > 0) {
+    // Inline JSON into a sentinel bundle entry. The worker reads this at
+    // runtime to build the import map.
+    const manifestJs = `export default ${JSON.stringify(sharedSpecifierToBundleId)};\n`;
+    bundles["_shared_manifest"] = { js: manifestJs, css: "", hash: contentHash(manifestJs) };
   }
 
   // ── 2. Write bundles.generated.ts next to the worker entry. ─────────────

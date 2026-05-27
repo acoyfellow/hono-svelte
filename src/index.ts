@@ -189,12 +189,43 @@ function escapeHtml(s: string): string {
 
 /** Reserved bundle id for the shared Svelte runtime. */
 const RUNTIME_ID = "_runtime";
+/** Reserved bundle id for the shared-modules manifest (specifier → bundle id). */
+const SHARED_MANIFEST_ID = "_shared_manifest";
 
 function runtimeUrl(): string | null {
   const r = registeredBundles[RUNTIME_ID];
   if (!r) return null;
   const base = r.hash ? `${RUNTIME_ID}.${r.hash}` : RUNTIME_ID;
   return `${mountPrefix}/${base}.js`;
+}
+
+function sharedManifest(): Record<string, string> | null {
+  const b = registeredBundles[SHARED_MANIFEST_ID];
+  if (!b) return null;
+  // The manifest bundle is a tiny ES module that exports the specifier->
+  // bundleId map as its default. We can't import() it at request time, so
+  // we parse it. The build emits a known shape:
+  //   export default {"./store.svelte":"_shared_store_svelte_ts"};
+  const m = b.js.match(/export default (\{[^}]*\});/);
+  if (!m) return null;
+  try {
+    return JSON.parse(m[1]);
+  } catch {
+    return null;
+  }
+}
+
+function sharedImportMapEntries(): Record<string, string> {
+  const manifest = sharedManifest();
+  if (!manifest) return {};
+  const out: Record<string, string> = {};
+  for (const [specifier, bundleId] of Object.entries(manifest)) {
+    const b = registeredBundles[bundleId];
+    if (!b) continue;
+    const base = b.hash ? `${bundleId}.${b.hash}` : bundleId;
+    out[specifier] = `${mountPrefix}/${base}.js`;
+  }
+  return out;
 }
 
 function shell(
@@ -230,14 +261,19 @@ function shell(
   // to the old self-contained per-component shape: no import map, the bundle
   // ships its own runtime.
   const runtime = runtimeUrl();
+  const sharedEntries = sharedImportMapEntries();
   const importMap = runtime ? `<script type="importmap">${JSON.stringify({
     imports: {
       "svelte": runtime,
       "svelte/internal/client": runtime,
       "svelte/internal/disclose-version": runtime,
+      ...sharedEntries,
     },
   })}</script>` : "";
-  const runtimePreload = runtime ? `<link rel="modulepreload" href="${runtime}">` : "";
+  const sharedPreloads = Object.values(sharedEntries)
+    .map((url) => `<link rel="modulepreload" href="${url}">`)
+    .join("\n");
+  const runtimePreload = runtime ? `<link rel="modulepreload" href="${runtime}">\n${sharedPreloads}` : sharedPreloads;
 
   return `<!doctype html>
 <html lang="en">
